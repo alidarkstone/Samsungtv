@@ -48,34 +48,47 @@
         }, function () { done([]); });
     }
 
+    // uygulama adından sabit bir renk tonu üret
+    function hue(str) {
+        var h = 0;
+        for (var i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) % 360; }
+        return h;
+    }
+
     function tile(app) {
         var b = document.createElement('button');
-        b.className = 'tile' + (favs.indexOf(app.id) >= 0 ? ' fav' : '');
+        b.className = 'tile';
         b.setAttribute('data-id', app.id);
+        var card = document.createElement('div');
+        card.className = 'card';
+        var h = hue(app.name);
+        card.style.background = 'linear-gradient(140deg, hsl(' + h + ',60%,52%), hsl(' + ((h + 40) % 360) + ',65%,30%))';
         var letter = document.createElement('div');
         letter.className = 'letter';
         letter.textContent = app.name.charAt(0).toUpperCase();
         if (app.icon) {
             var img = new Image();
-            img.onerror = function () { b.replaceChild(letter, img); };
+            img.onload = function () { card.style.background = 'rgba(255,255,255,.1)'; };
+            img.onerror = function () { card.replaceChild(letter, img); };
             img.src = app.icon.indexOf('/') === 0 ? 'file://' + app.icon : app.icon;
-            b.appendChild(img);
+            card.appendChild(img);
         } else {
-            b.appendChild(letter);
+            card.appendChild(letter);
         }
         var n = document.createElement('div');
         n.className = 'name';
         n.textContent = app.name;
+        b.appendChild(card);
         b.appendChild(n);
         return b;
     }
 
-    function section(title, list) {
+    function section(title, list, cls) {
         if (!list.length) { return; }
         var h = document.createElement('h2');
         h.textContent = title;
         var g = document.createElement('div');
-        g.className = 'grid';
+        g.className = 'grid' + (cls ? ' ' + cls : '');
         list.forEach(function (a) { g.appendChild(tile(a)); });
         main.appendChild(h);
         main.appendChild(g);
@@ -88,7 +101,7 @@
         }).filter(Boolean);
         var rest = apps.filter(function (a) { return favs.indexOf(a.id) < 0; }).sort(byName);
         main.innerHTML = '';
-        section('Favoriler', fav);
+        section('Favoriler', fav, 'favs');
         section(fav.length ? 'Tüm uygulamalar' : 'Uygulamalar', rest);
         var tiles = main.querySelectorAll('.tile');
         var target = tiles[0];
